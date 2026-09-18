@@ -1,7 +1,7 @@
 import { useState } from "react";
 import "./index.css";
 
-const API_URL = "https://businessintel-ai.onrender.com";
+const API_URL = import.meta.env.VITE_API_URL;
 
 function App() {
   const [website, setWebsite] = useState("");
@@ -45,6 +45,114 @@ function App() {
     } finally {
       setLoading(false);
     }
+  }
+
+  function buildReportMarkdown() {
+    if (!result) return "";
+
+    const profile = result.company_profile;
+    const strategy = result.business_strategy;
+
+    if (result.report_markdown) {
+      return result.report_markdown;
+    }
+
+    let markdown = "# BusinessIntel AI Report\n\n";
+
+    markdown += "## Company Profile\n\n";
+    markdown += `### Company\n${profile.company_name}\n\n`;
+    markdown += `### Industry\n${profile.industry}\n\n`;
+    markdown += `### Description\n${profile.description}\n\n`;
+    markdown += `### Offer\n${profile.offer}\n\n`;
+    markdown += `### Target Audience\n${profile.target_audience}\n\n`;
+    markdown += `### Problem Solved\n${profile.problem_solved}\n\n`;
+    markdown += `### Business Model\n${profile.business_model}\n\n`;
+
+    markdown += "## Evidence\n\n";
+    for (const item of profile.evidence || []) {
+      markdown += `### ${item.source_title}\n`;
+      markdown += `${item.claim}\n\n`;
+      markdown += `${item.source_url}\n\n`;
+    }
+
+    markdown += "## Marketing Observations\n\n";
+    for (const item of strategy.marketing_observations || []) {
+      markdown += `### ${item.observation}\n\n`;
+      markdown += `**Implication**\n\n${item.implication}\n\n`;
+
+      if (item.supporting_evidence?.length) {
+        markdown += "**Supporting Evidence**\n\n";
+        item.supporting_evidence.forEach((evidence) => {
+          markdown += `- ${evidence}\n`;
+        });
+        markdown += "\n";
+      }
+    }
+
+    markdown += "## Lead Generation Opportunities\n\n";
+    for (const item of strategy.lead_generation_opportunities || []) {
+      markdown += `### ${item.opportunity}\n\n`;
+      markdown += `**Rationale**\n\n${item.rationale}\n\n`;
+      markdown += `**Suggested Approach**\n\n${item.suggested_approach}\n\n`;
+
+      if (item.supporting_evidence?.length) {
+        markdown += "**Supporting Evidence**\n\n";
+        item.supporting_evidence.forEach((evidence) => {
+          markdown += `- ${evidence}\n`;
+        });
+        markdown += "\n";
+      }
+    }
+
+    markdown += "## Automation Opportunities\n\n";
+    for (const item of strategy.automation_opportunities || []) {
+      markdown += `### ${item.process}\n\n`;
+      markdown += `**Automation Idea**\n\n${item.automation_idea}\n\n`;
+      markdown += `**Expected Benefit**\n\n${item.expected_benefit}\n\n`;
+
+      if (item.supporting_evidence?.length) {
+        markdown += "**Supporting Evidence**\n\n";
+        item.supporting_evidence.forEach((evidence) => {
+          markdown += `- ${evidence}\n`;
+        });
+        markdown += "\n";
+      }
+    }
+
+    markdown += "## Recommended Actions\n\n";
+    for (const item of strategy.recommended_actions || []) {
+      markdown += `### ${item.action}\n\n`;
+      markdown += `**Reason**\n\n${item.reason}\n\n`;
+      markdown += `**Expected Outcome**\n\n${item.expected_outcome}\n\n`;
+    }
+
+    return markdown;
+  }
+
+  function downloadReport() {
+    const markdown = buildReportMarkdown();
+
+    if (!markdown) {
+      setError("No report is available to download.");
+      return;
+    }
+
+    const blob = new Blob([markdown], {
+      type: "text/markdown;charset=utf-8",
+    });
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = "businessintel-report.md";
+    link.style.display = "none";
+
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
   return (
@@ -135,6 +243,13 @@ function App() {
                 <div className="badge">ANALYSIS COMPLETE</div>
                 <h2>Business Intelligence Report</h2>
               </div>
+
+              <button
+                className="download-button"
+                onClick={downloadReport}
+              >
+                Download Report
+              </button>
             </div>
 
             <CompanyProfile profile={result.company_profile} />
