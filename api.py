@@ -4,9 +4,10 @@ from pydantic import BaseModel, HttpUrl
 
 from graph import (
     run_business_analysis,
-    save_report,
     shutdown_observability,
 )
+
+from report import render_markdown_report
 
 
 app = FastAPI(
@@ -16,8 +17,6 @@ app = FastAPI(
 )
 
 
-# Allow the frontend to communicate with the API.
-# We can restrict this to the final Vercel domain later.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -72,17 +71,16 @@ def analyze_business(request: BusinessRequest):
                 "error": "Final report was not generated.",
             }
 
-        report_path = save_report(result)
+        report_markdown = render_markdown_report(report)
 
         return {
             "success": True,
             "company_profile": report.company_profile.model_dump(),
             "business_strategy": report.business_strategy.model_dump(),
-            "report_file": str(report_path),
+            "report_markdown": report_markdown,
         }
 
     except Exception as error:
-
         return {
             "success": False,
             "error_type": type(error).__name__,
