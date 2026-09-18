@@ -20,7 +20,10 @@ app = FastAPI(
 # We can restrict this to the final Vercel domain later.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://frontend-pink-omega-62.vercel.app",
+        "http://localhost:5173",
+    ],
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
