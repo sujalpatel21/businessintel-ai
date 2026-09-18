@@ -1,7 +1,7 @@
 import { useState } from "react";
 import "./index.css";
 
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_URL || "https://businessintel-ai.onrender.com";
 
 function App() {
   const [website, setWebsite] = useState("");
@@ -33,7 +33,19 @@ function App() {
         }),
       });
 
-      const data = await response.json();
+      const rawResponse = await response.text();
+
+      let data;
+
+      try {
+        data = JSON.parse(rawResponse);
+      } catch {
+        throw new Error(
+          response.ok
+            ? rawResponse || "The server returned an unexpected response."
+            : `Server error (${response.status}): ${rawResponse || "No response body."}`,
+        );
+      }
 
       if (!response.ok || !data.success) {
         throw new Error(data.error || "Business analysis failed.");
