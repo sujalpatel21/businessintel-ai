@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, HttpUrl
 
 from graph import (
@@ -12,6 +13,19 @@ app = FastAPI(
     title="BusinessIntel AI",
     description="AI-powered business research and strategy API",
     version="1.0.0",
+)
+
+
+# Allow the frontend to communicate with the API.
+# We can restrict this to the final Vercel domain later.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
@@ -40,9 +54,7 @@ def analyze_business(request: BusinessRequest):
 
     import uuid
 
-    thread_id = (
-        f"business-{uuid.uuid4().hex}"
-    )
+    thread_id = f"business-{uuid.uuid4().hex}"
 
     try:
         result = run_business_analysis(
@@ -63,12 +75,8 @@ def analyze_business(request: BusinessRequest):
 
         return {
             "success": True,
-            "company_profile": (
-                report.company_profile.model_dump()
-            ),
-            "business_strategy": (
-                report.business_strategy.model_dump()
-            ),
+            "company_profile": report.company_profile.model_dump(),
+            "business_strategy": report.business_strategy.model_dump(),
             "report_file": str(report_path),
         }
 
@@ -83,5 +91,4 @@ def analyze_business(request: BusinessRequest):
 
 @app.on_event("shutdown")
 def shutdown():
-
     shutdown_observability()
