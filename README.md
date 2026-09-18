@@ -162,6 +162,49 @@ The cloud API returns the report content directly, so the deployed application d
 - Render
 - Vercel
 
+## CI/CD
+
+GitHub Actions runs automated checks on every push to `main` and on pull requests targeting `main`.
+
+The CI pipeline checks:
+
+### Backend
+
+- Python 3.13 environment
+- Locked dependency installation with uv
+- Python compilation checks
+
+### Frontend
+
+- Node.js 22 environment
+- Clean dependency installation with `npm ci`
+- ESLint
+- Vite production build
+
+### Docker
+
+After the backend and frontend checks pass, CI builds the backend Docker image.
+
+Deployment remains connected to the existing GitHub integrations:
+
+```text
+GitHub push
+   ↓
+GitHub Actions CI
+   ├── Backend checks
+   ├── Frontend checks
+   └── Docker build
+         ↓
+   Render backend deploy
+   Vercel frontend deploy
+```
+
+The CI workflow is located at:
+
+```text
+.github/workflows/ci.yml
+```
+
 ## API
 
 ### GET /
@@ -201,6 +244,10 @@ The response contains:
 
 ```text
 Business Stategist project/
+│
+├── .github/
+│   └── workflows/
+│       └── ci.yml
 │
 ├── frontend/
 │   ├── src/
@@ -358,6 +405,7 @@ This project is focused on:
 - Report generation
 - API delivery
 - Production deployment
+- Automated CI checks
 
 Future improvements can include:
 
@@ -366,8 +414,8 @@ Future improvements can include:
 - Database-backed analysis history
 - Background job processing
 - Better report export formats
-- Automated CI/CD checks
 - More granular production monitoring
+- Automated deployment gates
 
 ## Author
 
@@ -382,3 +430,4 @@ Built as a hands-on Agentic AI engineering project to practice:
 - Docker
 - Cloud deployment
 - Production debugging
+- CI/CD
